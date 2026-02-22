@@ -17,9 +17,114 @@
 
 % TODO: Implement manual 2D convolution using Sobel Operator(Gx and Gy)
 % output - Convolved image result (grayscale)
-function output = my_conv2(varargin) %Add necessary input arguments
 
+image = imread ("image_1024x1024.png");
+image = rgb2gray(image);
+
+Gx = [-1 0 1, -2 0 2, -1 0 1];
+Gy = [1 2 1, 0 0 0, -1 -2 -1];
+
+
+function output = my_conv2(img, kernel,type) %Add necessary input arguments
+
+    % Convert to double to prevent overflow (important for Sobel)
+    img = double(img);
+    kernel = double(kernel);
+
+    % Flip kernel for true convolution 180 degrees
+    kernel = rot90(kernel, 2);
+
+    % Get sizes of the image and the kernel
+    [h, w] = size(img);
+    [kh, kw] = size(kernel);
+
+    % -----------------------------------
+    % Step 1: Create padded image (FULL)
+    % -----------------------------------
+    pad_h = kh - 1;
+    pad_w = kw - 1;
+    
+    % Pad the image with zeros to avoid getting errors 
+    padded_zeros = zeros(h + 2*pad_h, w + 2*pad_w);
+
+    for i = 1:h
+        for j = 1:w
+            padded_zeros(i + pad_h, j + pad_w) = img(i, j);
+        end
+    end
+
+    % Compute full convolution
+    full_h = h + kh - 1;
+    full_w = w + kw - 1;
+
+    full_output = zeros(full_h, full_w);
+
+    for i = 1:full_h
+        for j = 1:full_w
+
+            sum_val = 0;
+
+            for m = 1:kh
+                for n = 1:kw
+                    sum_val = sum_val + ...
+                        padded_zeros(i + m - 1, j + n - 1) * kernel(m, n);
+                end
+            end
+
+            full_output(i, j) = sum_val;
+
+        end
+    end
+%'full': Returns the complete convolution.
+%'same': Returns the central part, matching the input image size
+%'valid': Returns only the parts computed without zero-padded edge
+
+    switch lower(type)
+
+        case 'full'
+            output = full_output;
+
+        case 'same'
+            start_i = floor(kh/2) + 1;
+            start_j = floor(kw/2) + 1;
+
+            output = zeros(h, w);
+
+            for i = 1:h
+                for j = 1:w
+                    output(i, j) = ...
+                        full_output(start_i + i - 1, start_j + j - 1);
+                end
+            end
+
+        case 'valid'
+            valid_h = h - kh + 1;
+            valid_w = w - kw + 1;
+
+            output = zeros(valid_h, valid_w);
+
+            for i = 1:valid_h
+                for j = 1:valid_w
+                    output(i, j) = ...
+                        full_output(i + kh - 1, j + kw - 1);
+                end
+            end
+
+        otherwise
+            error('Shape must be ''full'', ''same'', or ''valid''');
+
+    end
 end
+subplot(1,2,1); 
+imshow(image)
+% Apply Sobel operators to the image
+edges_x = my_conv2(image, Gx, 'same');
+edges_y = my_conv2(image, Gy, 'same');
+
+% Combine the results to get the final edge-detected image
+convolvedImage = mat2gray(sqrt(edges_x.^2 + edges_y.^2));
+subplot(1,2,2); 
+imshow(convolvedImage);
 
 %% ========================================================================
 %  PART 2: Built-in 2D Convolution Implementation
@@ -29,6 +134,7 @@ end
 
 % TODO: Use conv2 to perform 2D convolution
 % output - Convolved image result (grayscale)
+
 function output = inbuilt_conv2(varargin) %Add necessary input arguments
 
 end
@@ -41,7 +147,7 @@ end
 % Compare the performance of manual 2D convolution (my_conv2) with MATLAB's
 % built-in conv2 function (inbuilt_conv2).
 
-function run_analysis()
+function runAnalysis()
     % TODO1:
     % Load all the sample images from the 'sample_images' folder
     
