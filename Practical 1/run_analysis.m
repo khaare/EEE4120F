@@ -17,13 +17,10 @@
 
 % TODO: Implement manual 2D convolution using Sobel Operator(Gx and Gy)
 % output - Convolved image result (grayscale)
-
-image = imread ("image_1024x1024.png");
-image = rgb2gray(image);
-
-Gx = [-1 0 1, -2 0 2, -1 0 1];
-Gy = [1 2 1, 0 0 0, -1 -2 -1];
-
+%--------------------------------------------------------------------------
+% Define edge detection kernels (Sobel kernel)
+Gx = [-1 0 1; -2 0 2; -1 0 1];
+Gy = [1 2 1; 0 0 0; -1 -2 -1];
 
 function output = my_conv2(img, kernel,type) %Add necessary input arguments
 
@@ -38,6 +35,43 @@ function output = my_conv2(img, kernel,type) %Add necessary input arguments
     [h, w] = size(img);
     [kh, kw] = size(kernel);
 
+    % -----------------------------------
+    % Step 1: Create padded image (FULL)
+    % -----------------------------------
+    pad_h = kh - 1;
+    pad_w = kw - 1;
+    
+    % Pad the image with zeros to avoid getting errors 
+    padded_zeros = zeros(h + 2*pad_h, w + 2*pad_w);
+
+    for i = 1:h
+        for j = 1:w
+            padded_zeros(i + pad_h, j + pad_w) = img(i, j);
+        end
+    end
+
+    % Compute full convolution
+    full_h = h + kh - 1;
+    full_w = w + kw - 1;
+
+    full_output = zeros(full_h, full_w);
+
+    for i = 1:full_h
+        for j = 1:full_w
+
+            sum_val = 0;
+
+            for m = 1:kh
+                for n = 1:kw
+                    sum_val = sum_val + ...
+                        padded_zeros(i + m - 1, j + n - 1) * kernel(m, n);
+                end
+            end
+
+            full_output(i, j) = sum_val;
+
+        end
+    end
     % -----------------------------------
     % Step 1: Create padded image (FULL)
     % -----------------------------------
@@ -115,16 +149,7 @@ function output = my_conv2(img, kernel,type) %Add necessary input arguments
 
     end
 end
-subplot(1,2,1); 
-imshow(image)
-% Apply Sobel operators to the image
-edges_x = my_conv2(image, Gx, 'same');
-edges_y = my_conv2(image, Gy, 'same');
 
-% Combine the results to get the final edge-detected image
-convolvedImage = mat2gray(sqrt(edges_x.^2 + edges_y.^2));
-subplot(1,2,2); 
-imshow(convolvedImage);
 
 %% ========================================================================
 %  PART 2: Built-in 2D Convolution Implementation
@@ -164,6 +189,65 @@ function runAnalysis()
     %   f. Plot and compare results
     %   g. Visualise the edge detection results(Optional)
     
+    % Get all images in the folder
+    imageFiles = dir('*.png');  
     
+    % Loop over all images
+    for k = 1:length(imageFiles)
+    
+        % Read image
+        filename = fullfile(imageFiles(k).folder, imageFiles(k).name);
+        image = imread(filename);
+        
+        % Convert to grayscale if needed
+        if size(image,3) == 3
+            image = rgb2gray(image);
+        end
+    
+        % ---- START TIMING ----
+        tic
+        
+        % Apply Sobel operators
+        edges_x = my_conv2(image, Gx, 'valid');
+        edges_y = my_conv2(image, Gy, 'valid');
+    
+        % Combine gradients
+        convolvedImage = mat2gray(sqrt(edges_x.^2 + edges_y.^2));
+        
+        % ---- END TIMING ----
+        elapsedTime = toc;
+        % ---- START TIMING ----
+        tic
+        % Apply Sobel operators
+        edges_x1 = inbuilt_conv2(image, Gx, 'valid');
+        edges_y1 = inbuilt_conv2(image, Gy, 'valid');
+    
+        % Combine gradients
+        convolvedImage1 = mat2gray(sqrt(edges_x1.^2 + edges_y1.^2));
+        
+        % ---- END TIMING ----
+        elapsedTime1 = toc;
+        % Display result
+        speedup = elapsedTime/elapsedTime1;
+        figure;
+        subplot(1,3,1);
+        imshow(image);
+        title('Original Image');
+    
+        subplot(1,3,2);
+        imshow(convolvedImage);
+        title(['Edge Detected (manual) - Time: ' num2str(elapsedTime) ' sec']);
+    
+        subplot(1,3,3)
+        imshow(convolvedImage1)
+        title(['Edge Detected (inbuilt) - Time: ' num2str(elapsedTime1) ' sec']);
+
+        % Print time in Command Window
+        fprintf('Image: %s - Execution Time (manual): %.6f seconds - Execution Time (inbuilt): %.6f seconds -  Speedup : %.6f \n', ...
+                imageFiles(k).name, elapsedTime, elapsedTime1, speedup);
+        
+    end
     
 end
+
+runAnalysis();
