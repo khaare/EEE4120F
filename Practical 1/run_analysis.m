@@ -6,7 +6,7 @@
 %
 % MEMBERS:
 %   - Member 1 Khaarendiwe Mulaudzi, MLDKHA010
-%   - Member 2 Name, Student Number
+%   - Member 2 Tlangelani Tembe, TMBTLA001
 
 
 %% ========================================================================
