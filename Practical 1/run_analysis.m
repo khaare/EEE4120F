@@ -19,8 +19,6 @@
 % output - Convolved image result (grayscale)
 %--------------------------------------------------------------------------
 % Define edge detection kernels (Sobel kernel)
-Gx = [-1 0 1; -2 0 2; -1 0 1];
-Gy = [1 2 1; 0 0 0; -1 -2 -1];
 
 function output = my_conv2(img, kernel,type) %Add necessary input arguments
 
@@ -160,8 +158,9 @@ end
 % TODO: Use conv2 to perform 2D convolution
 % output - Convolved image result (grayscale)
 
-function output = inbuilt_conv2(varargin) %Add necessary input arguments
-
+function output = inbuilt_conv2(img, kernel,type) %Add necessary input arguments
+    image = double(img);
+    output = conv2(image, kernel, type);
 end
 
 
@@ -191,7 +190,8 @@ function runAnalysis()
     
     % Get all images in the folder
     imageFiles = dir('*.png');  
-    
+    Gx = [-1 0 1; -2 0 2; -1 0 1];
+    Gy = [1 2 1; 0 0 0; -1 -2 -1];
     % Loop over all images
     for k = 1:length(imageFiles)
     
@@ -236,11 +236,11 @@ function runAnalysis()
     
         subplot(1,3,2);
         imshow(convolvedImage);
-        title(['Edge Detected (manual) - Time: ' num2str(elapsedTime) ' sec']);
+        title(['(manual)' imageFiles(k).name]);
     
         subplot(1,3,3)
         imshow(convolvedImage1)
-        title(['Edge Detected (inbuilt) - Time: ' num2str(elapsedTime1) ' sec']);
+        title(['(inbuilt) - Time: ' num2str(elapsedTime1) ' s']);
 
         % Print time in Command Window
         fprintf('Image: %s - Execution Time (manual): %.6f seconds - Execution Time (inbuilt): %.6f seconds -  Speedup : %.6f \n', ...
