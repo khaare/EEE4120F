@@ -31,7 +31,7 @@ for i = 1:length(res_names)
     results_table.Megapixels(i) = mp;
     results_table.ExecutionTime_s(i) = exec_time;
     
-    % Task 0: Plot and Save the image [cite: 149]
+    % Task 0: Plot and Save the image 
     filename = sprintf('Mandelbrot_%s_Sequential.png', res_names{i});
     mandelbrot_plot(img_data, filename);
     
@@ -49,4 +49,5 @@ disp('Final Sequential Benchmarking Results:');
 disp(results_table);
 
 % Save the results table for Task 3 comparison
+
 save('sequential_results.mat', 'results_table');
