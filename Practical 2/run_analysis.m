@@ -2,17 +2,12 @@
 % Practical 2: Mandelbrot-Set Serial vs Parallel Analysis
 % =========================================================================
 %
-% GROUP NUMBER: 3
+% GROUP NUMBER:3
 %
 % MEMBERS:
-%   - Member 1 Name, Student Number
+%   - Member 1 Khaarendiwe, MLDKHA010
 %   - Member 2 Name, Student Number
 
-%% ========================================================================
-%  PART 1: Mandelbrot Set Image Plotting and Saving
-%  ========================================================================
-%
-% TODO: Implement Mandelbrot set plotting and saving function
 function run_analysis()
 
 image_sizes = [
@@ -29,9 +24,7 @@ parallel_times = zeros(num_sizes,max_workers);
 speedups = zeros(num_sizes,max_workers);
 efficiencies = zeros(num_sizes,max_workers);
 
-%% =============================
 % SERIAL BENCHMARK
-%% =============================
 
 fprintf("Running Sequential Benchmark\n");
 
@@ -41,14 +34,15 @@ for i = 1:num_sizes
     height = image_sizes(i,2);
 
     tic
-    mandelbrot_serial(width,height,max_iterations);
+    serial_img = mandelbrot_serial(width,height,max_iterations);
     serial_times(i) = toc;
+    filename = sprintf("mandelbrot_serial_%dx%d.png",width,height);
+    mandelbrot_plot(serial_img, filename);
+    
 
 end
 
-%% =============================
 % PARALLEL BENCHMARK
-%% =============================
 
 for workers = 2:max_workers
 
@@ -63,8 +57,10 @@ for workers = 2:max_workers
         height = image_sizes(i,2);
 
         tic
-        mandelbrot_parallel(width,height,max_iterations);
+        parallel_img = mandelbrot_parallel(width,height,max_iterations);
         parallel_times(i,workers) = toc;
+        filename = sprintf("mandelbrot_parallel_%dx%d_%dworkers.png",width,height,workers);
+        mandelbrot_plot(parallel_img, filename);
 
         speedups(i,workers) = serial_times(i) / parallel_times(i,workers);
 
@@ -77,9 +73,7 @@ end
 
 delete(gcp('nocreate'));
 
-%% =============================
-% DISPLAY RESULTS TABLE
-%% =============================
+% DISPLAY RESULTS
 
 fprintf("\nPerformance Results\n");
 
@@ -103,10 +97,7 @@ for i = 1:num_sizes
 
 end
 
-%% =============================
 % PLOT SPEEDUP GRAPH
-%% =============================
-
 figure
 hold on
 
@@ -121,9 +112,7 @@ legend("SVGA","HD","FullHD","2K","QHD","4K","5K","8K")
 
 grid on
 
-%% =============================
 % PLOT EFFICIENCY GRAPH
-%% =============================
 
 figure
 hold on
@@ -139,18 +128,52 @@ title("Parallel Efficiency vs Workers")
 grid on
 
 end
+
+%% ========================================================================
+%  PART 1: Mandelbrot Set Image Plotting and Saving
+% ========================================================================
+
+function mandelbrot_plot(iter_matrix, filename)
+
+figure
+imagesc(iter_matrix)
+axis equal
+axis off
+colormap(hot)
+
+saveas(gcf, filename)
+
+end
+
+
 %% ========================================================================
 %  PART 2: Serial Mandelbrot Set Computation
-%  ========================================================================`
-%
-%TODO: Implement serial Mandelbrot set computation function
-function iter_matrix = mandelbrot_serial(width, height, max_iterations)
+% ========================================================================
 
+
+% Helper function
+function iter = mandelbrot_pixel(x0, y0, max_iterations)
+    x = 0;
+    y = 0;
+    iter = 0;
+
+    while (iter < max_iterations) && (x*x + y*y <= 4)
+        x_next = x*x - y*y + x0;
+        y_next = 2*x*y + y0;
+
+        x = x_next;
+        y = y_next;
+
+        iter = iter + 1;
+    end
+end
+
+
+function iter_matrix = mandelbrot_serial(width, height, max_iterations)
 x_min = -2.0;
 x_max = 0.5;
 y_min = -1.2;
 y_max = 1.2;
-
 iter_matrix = zeros(height,width);
 
 for px = 1:width
@@ -159,40 +182,22 @@ for px = 1:width
         x0 = x_min + (px-1)*(x_max-x_min)/(width-1);
         y0 = y_min + (py-1)*(y_max-y_min)/(height-1);
 
-        x = 0;
-        y = 0;
-        iteration = 0;
-
-        while (iteration < max_iterations) && (x*x + y*y <= 4)
-
-            x_next = x*x - y*y + x0;
-            y_next = 2*x*y + y0;
-
-            x = x_next;
-            y = y_next;
-
-            iteration = iteration + 1;
-        end
-
-        iter_matrix(py,px) = iteration;
-
+        iter_matrix(py,px) = mandelbrot_pixel(x0,y0,max_iterations);
     end
 end
 
 end
+
+
 %% ========================================================================
 %  PART 3: Parallel Mandelbrot Set Computation
-%  ========================================================================
-%
-%TODO: Implement parallel Mandelbrot set computation function
-function iter_matrix = mandelbrot_parallel(width, height, max_iterations)
+% ========================================================================
 
-% Standard Mandelbrot region
+function iter_matrix = mandelbrot_parallel(width, height, max_iterations)
 x_min = -2.0;
 x_max = 0.5;
 y_min = -1.2;
 y_max = 1.2;
-
 iter_matrix = zeros(height, width);
 
 % Parallel outer loop
@@ -200,37 +205,13 @@ parfor px = 1:width
 
     for py = 1:height
 
-        % Map pixel to complex plane
         x0 = x_min + (px-1) * (x_max - x_min) / (width-1);
         y0 = y_min + (py-1) * (y_max - y_min) / (height-1);
 
-        x = 0;
-        y = 0;
-        iteration = 0;
-
-        while (iteration < max_iterations) && (x*x + y*y <= 4)
-
-            x_next = x*x - y*y + x0;
-            y_next = 2*x*y + y0;
-
-            x = x_next;
-            y = y_next;
-
-            iteration = iteration + 1;
-
-        end
-
-        iter_matrix(py,px) = iteration;
+        iter_matrix(py,px) = mandelbrot_pixel(x0,y0,max_iterations);
 
     end
 
 end
 
 end
-
-%% ========================================================================
-%  PART 4: Testing and Analysis
-%  ========================================================================
-% Compare the performance of serial Mandelbrot set computation
-% with parallel Mandelbrot set computation.
-
