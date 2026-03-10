@@ -19,49 +19,51 @@ Parallel pool using the 'Processes' profile is shutting down.
 Performance Results
 
 Resolution 800x600
-Serial Time: 0.431 s
-Workers 2 | Parallel: 0.397 s | Speedup: 1.09 | Efficiency: 54.26%
-Workers 3 | Parallel: 0.287 s | Speedup: 1.50 | Efficiency: 50.11%
-Workers 4 | Parallel: 0.250 s | Speedup: 1.73 | Efficiency: 43.14%
+Serial Time: 0.412 s
+Workers 2 | Parallel: 0.328 s | Speedup: 1.26 | Efficiency: 62.82%
+Workers 3 | Parallel: 0.262 s | Speedup: 1.58 | Efficiency: 52.52%
+Workers 4 | Parallel: 0.261 s | Speedup: 1.58 | Efficiency: 39.52%
 
 Resolution 1280x720
-Serial Time: 0.799 s
-Workers 2 | Parallel: 0.544 s | Speedup: 1.47 | Efficiency: 73.41%
-Workers 3 | Parallel: 0.434 s | Speedup: 1.84 | Efficiency: 61.40%
-Workers 4 | Parallel: 0.294 s | Speedup: 2.71 | Efficiency: 67.87%
+Serial Time: 0.830 s
+Workers 2 | Parallel: 0.556 s | Speedup: 1.49 | Efficiency: 74.64%
+Workers 3 | Parallel: 0.431 s | Speedup: 1.93 | Efficiency: 64.25%
+Workers 4 | Parallel: 0.397 s | Speedup: 2.09 | Efficiency: 52.33%
 
 Resolution 1920x1080
-Serial Time: 1.792 s
-Workers 2 | Parallel: 1.027 s | Speedup: 1.74 | Efficiency: 87.23%
-Workers 3 | Parallel: 0.771 s | Speedup: 2.32 | Efficiency: 77.46%
-Workers 4 | Parallel: 0.601 s | Speedup: 2.98 | Efficiency: 74.60%
+Serial Time: 1.847 s
+Workers 2 | Parallel: 1.039 s | Speedup: 1.78 | Efficiency: 88.86%
+Workers 3 | Parallel: 0.801 s | Speedup: 2.31 | Efficiency: 76.89%
+Workers 4 | Parallel: 0.647 s | Speedup: 2.86 | Efficiency: 71.40%
 
 Resolution 2048x1080
-Serial Time: 1.909 s
-Workers 2 | Parallel: 1.121 s | Speedup: 1.70 | Efficiency: 85.13%
-Workers 3 | Parallel: 0.815 s | Speedup: 2.34 | Efficiency: 78.12%
-Workers 4 | Parallel: 0.665 s | Speedup: 2.87 | Efficiency: 71.80%
+Serial Time: 1.896 s
+Workers 2 | Parallel: 1.147 s | Speedup: 1.65 | Efficiency: 82.69%
+Workers 3 | Parallel: 0.792 s | Speedup: 2.40 | Efficiency: 79.84%
+Workers 4 | Parallel: 0.660 s | Speedup: 2.87 | Efficiency: 71.80%
 
 Resolution 2560x1440
-Serial Time: 3.166 s
-Workers 2 | Parallel: 1.788 s | Speedup: 1.77 | Efficiency: 88.55%
-Workers 3 | Parallel: 1.268 s | Speedup: 2.50 | Efficiency: 83.25%
-Workers 4 | Parallel: 0.998 s | Speedup: 3.17 | Efficiency: 79.29%
+Serial Time: 3.195 s
+Workers 2 | Parallel: 1.842 s | Speedup: 1.73 | Efficiency: 86.71%
+Workers 3 | Parallel: 1.335 s | Speedup: 2.39 | Efficiency: 79.81%
+Workers 4 | Parallel: 1.039 s | Speedup: 3.07 | Efficiency: 76.85%
 
 Resolution 3840x2160
-Serial Time: 7.214 s
-Workers 2 | Parallel: 4.208 s | Speedup: 1.71 | Efficiency: 85.73%
-Workers 3 | Parallel: 2.806 s | Speedup: 2.57 | Efficiency: 85.69%
-Workers 4 | Parallel: 2.311 s | Speedup: 3.12 | Efficiency: 78.05%
+Serial Time: 7.102 s
+Workers 2 | Parallel: 4.342 s | Speedup: 1.64 | Efficiency: 81.77%
+Workers 3 | Parallel: 3.099 s | Speedup: 2.29 | Efficiency: 76.40%
+Workers 4 | Parallel: 2.395 s | Speedup: 2.97 | Efficiency: 74.13%
 
 Resolution 5120x2880
-Serial Time: 12.650 s
-Workers 2 | Parallel: 7.617 s | Speedup: 1.66 | Efficiency: 83.03%
-Workers 3 | Parallel: 5.016 s | Speedup: 2.52 | Efficiency: 84.06%
-Workers 4 | Parallel: 4.086 s | Speedup: 3.10 | Efficiency: 77.40%
+Serial Time: 19.712 s
+Workers 2 | Parallel: 7.561 s | Speedup: 2.61 | Efficiency: 130.35%
+Workers 3 | Parallel: 5.105 s | Speedup: 3.86 | Efficiency: 128.72%
+Workers 4 | Parallel: 4.269 s | Speedup: 4.62 | Efficiency: 115.45%
 
 Resolution 7680x4320
-Serial Time: 28.300 s
-Workers 2 | Parallel: 16.537 s | Speedup: 1.71 | Efficiency: 85.57%
-Workers 3 | Parallel: 11.989 s | Speedup: 2.36 | Efficiency: 78.69%
+Serial Time: 52.214 s
+Workers 2 | Parallel: 15.867 s | Speedup: 3.29 | Efficiency: 164.54%
+Workers 3 | Parallel: 11.818 s | Speedup: 4.42 | Efficiency: 147.28%
+Workers 4 | Parallel: 8.550 s | Speedup: 6.11 | Efficiency: 152.67%
+>> 2.36 | Efficiency: 78.69%
 Workers 4 | Parallel: 9.067 s | Speedup: 3.12 | Efficiency: 78.03%
