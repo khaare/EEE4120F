@@ -14,14 +14,15 @@ image_sizes = [
 800,600;
 ];
 
+% SETTING UP FOR BENCHMARKING
 max_iterations = 1000;
 max_workers = 4;
 
-num_sizes = size(image_sizes,1);
+num_sizes = size(image_sizes,1); %number of rows in image_sizes
 
-serial_times = zeros(num_sizes,1);
+serial_times = zeros(num_sizes,1);%Creates a column vector filled with zeros
 parallel_times = zeros(num_sizes,max_workers);
-speedups = zeros(num_sizes,max_workers);
+speedups = zeros(num_sizes,max_workers);%Stores calculated speedup values
 efficiencies = zeros(num_sizes,max_workers);
 
 % SERIAL BENCHMARK
@@ -29,13 +30,16 @@ efficiencies = zeros(num_sizes,max_workers);
 fprintf("Running Sequential Benchmark\n");
 
 for i = 1:num_sizes
-
+    
+    %read values from the matrix
     width = image_sizes(i,1);
     height = image_sizes(i,2);
-
+    % Start execution timer
     tic
     serial_img = mandelbrot_serial(width,height,max_iterations);
-    serial_times(i) = toc;
+    % End timer 
+    serial_times(i) = toc; %Stores time for comparison later
+    %plot image
     filename = sprintf("mandelbrot_serial_%dx%d.png",width,height);
     mandelbrot_plot(serial_img, filename);
     
@@ -44,24 +48,27 @@ end
 
 % PARALLEL BENCHMARK
 
-for workers = 2:max_workers
+for workers = 2:max_workers %The serial case already represents 1 worker, so parallel starts at 2
 
     fprintf("\nRunning Parallel Benchmark with %d workers\n",workers);
 
-    delete(gcp('nocreate'));
-    parpool(workers);
+    delete(gcp('nocreate')); % Close Any Existing Parallel Pool, dont create one if none already exists
+    parpool(workers); % Create Parallel Pool with specified number of workers (4)
 
     for i = 1:num_sizes
 
         width = image_sizes(i,1);
         height = image_sizes(i,2);
-
+        % Start execution timer
         tic
         parallel_img = mandelbrot_parallel(width,height,max_iterations);
+        % End timer
         parallel_times(i,workers) = toc;
+        % Plot image
         filename = sprintf("mandelbrot_parallel_%dx%d_%dworkers.png",width,height,workers);
         mandelbrot_plot(parallel_img, filename);
 
+        % Calculate speedup and efficency
         speedups(i,workers) = serial_times(i) / parallel_times(i,workers);
 
         efficiencies(i,workers) = ...
@@ -70,7 +77,7 @@ for workers = 2:max_workers
     end
 
 end
-
+% Close Parallel Pool
 delete(gcp('nocreate'));
 
 % DISPLAY RESULTS
@@ -83,9 +90,9 @@ for i = 1:num_sizes
     height = image_sizes(i,2);
 
     fprintf("\nResolution %dx%d\n",width,height);
-    fprintf("Serial Time: %.3f s\n",serial_times(i));
+    fprintf("Serial Time: %.3f s\n",serial_times(i)); %print the serial time
 
-    for workers = 2:max_workers
+    for workers = 2:max_workers %loop over worker threads and print each of their execution times, speedups and efficiencies
 
         fprintf("Workers %d | Parallel: %.3f s | Speedup: %.2f | Efficiency: %.2f%%\n", ...
         workers, ...
@@ -100,6 +107,7 @@ end
 % PLOT SPEEDUP GRAPH
 figure
 hold on
+% All resolution speedups are plotted on the same figure
 
 for i = 1:num_sizes
     plot(2:max_workers, speedups(i,2:max_workers),'o-')
@@ -116,7 +124,7 @@ grid on
 
 figure
 hold on
-
+% All resolution speedups are plotted on the same figure
 for i = 1:num_sizes
     plot(2:max_workers, efficiencies(i,2:max_workers),'o-')
 end
