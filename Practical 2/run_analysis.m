@@ -5,13 +5,21 @@
 % GROUP NUMBER:3
 %
 % MEMBERS:
-%   - Member 1 Khaarendiwe, MLDKHA010
-%   - Member 2 Name, Student Number
+%   - Member 1 Khaarendiwe Mulaudzi, MLDKHA010
+%   - Member 2 Tlangelani Tembe, TMBTLA001
 
+% Performs the benchmarking
 function run_analysis()
 
 image_sizes = [
-800,600;
+    800,  600;    % SVGA
+    1280, 720;    % HD
+    1920, 1080;   % Full HD
+    2048, 1080;   % 2K
+    2560, 1440;   % QHD
+    3840, 2160;   % 4K UHD
+    5120, 2880;   % 5K
+    7680, 4320    % 8K UHD
 ];
 
 % SETTING UP FOR BENCHMARKING
@@ -52,7 +60,7 @@ for workers = 2:max_workers %The serial case already represents 1 worker, so par
 
     fprintf("\nRunning Parallel Benchmark with %d workers\n",workers);
 
-    delete(gcp('nocreate')); % Close Any Existing Parallel Pool, dont create one if none already exists
+    delete(gcp('nocreate')); % Close Any Existing Parallel Pool, don't create one if none already exists
     parpool(workers); % Create Parallel Pool with specified number of workers (4)
 
     for i = 1:num_sizes
@@ -65,10 +73,10 @@ for workers = 2:max_workers %The serial case already represents 1 worker, so par
         % End timer
         parallel_times(i,workers) = toc;
         % Plot image
-        filename = sprintf("mandelbrot_parallel_%dx%d_%dworkers.png",width,height,workers);
+        filename = sprintf("mandelbrot_parallel_%dx%d_%dworkers.png", width, height, workers);
         mandelbrot_plot(parallel_img, filename);
 
-        % Calculate speedup and efficency
+        % Calculate speedup and efficiency
         speedups(i,workers) = serial_times(i) / parallel_times(i,workers);
 
         efficiencies(i,workers) = ...
@@ -155,20 +163,20 @@ end
 
 
 %% ========================================================================
-%  PART 2: Serial Mandelbrot Set Computation
+%  PART 2: Helper function for the serial and parallel implementation
 % ========================================================================
 
 
 % Helper function
 function iter = mandelbrot_pixel(x0, y0, max_iterations)
-    x = 0;
+    x = 0; % Initialize the complex number z = x + iy to 0
     y = 0;
     iter = 0;
 
-    while (iter < max_iterations) && (x*x + y*y <= 4)
+    while (iter < max_iterations) && (x*x + y*y <= 4) % Iterates over each pixel until the conditions are met
         x_next = x*x - y*y + x0;
         y_next = 2*x*y + y0;
-
+        % Update z for the next iteration
         x = x_next;
         y = y_next;
 
@@ -176,21 +184,29 @@ function iter = mandelbrot_pixel(x0, y0, max_iterations)
     end
 end
 
+%% ========================================================================
+%  PART 3: Serial Mandelbrot Set Computation
+% ========================================================================
 
 function iter_matrix = mandelbrot_serial(width, height, max_iterations)
+% Define the region of the complex plane to visualize
 x_min = -2.0;
 x_max = 0.5;
 y_min = -1.2;
 y_max = 1.2;
-iter_matrix = zeros(height,width);
+iter_matrix = zeros(height, width); % Create a matrix to store iteration counts for each pixel
 
+% Loop through every pixel in the horizontal direction
 for px = 1:width
+    % Loop through every pixel in the vertical direction
     for py = 1:height
 
+        % Convert pixel coordinates (px, py) to coordinates in the complex plane (x0,y0)
         x0 = x_min + (px-1)*(x_max-x_min)/(width-1);
         y0 = y_min + (py-1)*(y_max-y_min)/(height-1);
 
-        iter_matrix(py,px) = mandelbrot_pixel(x0,y0,max_iterations);
+        % Use of the helper function to compute the Mandelbrot iteration count for this point
+        iter_matrix(py, px) = mandelbrot_pixel(x0,y0,max_iterations); 
     end
 end
 
@@ -198,7 +214,7 @@ end
 
 
 %% ========================================================================
-%  PART 3: Parallel Mandelbrot Set Computation
+%  PART 4: Parallel Mandelbrot Set Computation
 % ========================================================================
 
 function iter_matrix = mandelbrot_parallel(width, height, max_iterations)
@@ -216,7 +232,7 @@ parfor px = 1:width
         x0 = x_min + (px-1) * (x_max - x_min) / (width-1);
         y0 = y_min + (py-1) * (y_max - y_min) / (height-1);
 
-        iter_matrix(py,px) = mandelbrot_pixel(x0,y0,max_iterations);
+        iter_matrix(py,px) = mandelbrot_pixel(x0,y0,max_iterations); % use of the helper function
 
     end
 
