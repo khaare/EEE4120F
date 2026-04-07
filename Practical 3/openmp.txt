@@ -1,0 +1,213 @@
+/*
+ * EEE4120F Practical 3 – Wariara Freights Inc.
+ * OpenMP Shared-Memory Parallel Branch-and-Bound Solver
+ *
+ * Compile : gcc -O2 -fopenmp -o wariara_omp wariara_freights_route_openmp.c
+ * Run     : ./wariara_omp -i input.txt -p 4
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <time.h>
+#include <omp.h>
+
+/* ─────────────────────────────────────────
+ * Timing  (returns seconds as a double)
+ * ───────────────────────────────────────── */
+double gettime(void)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec + (double)ts.tv_nsec * 1e-9;
+}
+
+/* ─────────────────────────────────────────
+ * Problem data  (read-only after load)
+ * ───────────────────────────────────────── */
+#define MAXN 20
+
+int N;
+int E[MAXN][MAXN];
+
+/* ─────────────────────────────────────────
+ * Shared best solution  (protected by lock)
+ * ───────────────────────────────────────── */
+int            best_cost = INT_MAX;
+int            best_path[MAXN];
+omp_lock_t     best_lock;          /* protects best_cost and best_path */
+
+/* ─────────────────────────────────────────
+ * Sequential recursive B&B
+ * Each thread calls this with its OWN
+ * local visited[] and path[] arrays.
+ * ───────────────────────────────────────── */
+void branch_and_bound(int  level,
+                      int  current_city,
+                      int  current_cost,
+                      int  path[],
+                      bool visited[])
+{
+    /* ── Bound: read best_cost without lock (safe: int reads are atomic on x86) ── */
+    if (current_cost >= best_cost)
+        return;
+
+    /* ── Base case: complete route ── */
+    if (level == N) {
+        /* Lock only when updating the shared best */
+        omp_set_lock(&best_lock);
+        if (current_cost < best_cost) {
+            best_cost = current_cost;
+            for (int i = 0; i < N; i++)
+                best_path[i] = path[i];
+        }
+        omp_unset_lock(&best_lock);
+        return;
+    }
+
+    /* ── Branch: try every unvisited city ── */
+    for (int next = 0; next < N; next++) {
+        if (!visited[next]) {
+            visited[next] = true;
+            path[level]   = next;
+
+            branch_and_bound(level + 1,
+                             next,
+                             current_cost + E[current_city][next],
+                             path,
+                             visited);
+
+            visited[next] = false;   /* backtrack */
+        }
+    }
+}
+
+/* ─────────────────────────────────────────
+ * Read upper-triangular input file
+ * ───────────────────────────────────────── */
+void read_input(const char *filename)
+{
+    FILE *f = fopen(filename, "r");
+    if (!f) {
+        fprintf(stderr, "Error: cannot open file '%s'\n", filename);
+        exit(EXIT_FAILURE);
+    }
+
+    fscanf(f, "%d", &N);
+
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < N; j++)
+            E[i][j] = 0;
+
+    for (int j = 1; j < N; j++) {
+        for (int i = 0; i < j; i++) {
+            fscanf(f, "%d", &E[i][j]);
+            E[j][i] = E[i][j];
+        }
+    }
+
+    fclose(f);
+}
+
+/* ─────────────────────────────────────────
+ * Main
+ * ───────────────────────────────────────── */
+int main(int argc, char *argv[])
+{
+    double t_init_start = gettime();
+
+    /* ── Parse CLI arguments ── */
+    const char *input_file = NULL;
+    int         num_threads = 1;
+
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc)
+            input_file = argv[++i];
+        else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc)
+            num_threads = atoi(argv[++i]);
+        else
+            fprintf(stderr, "Unknown argument: %s\n", argv[i]);
+    }
+
+    if (!input_file) {
+        fprintf(stderr,
+                "Usage: %s -i <input_file> [-p <num_threads>]\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    /* ── Load problem ── */
+    read_input(input_file);
+
+    /* ── Set number of OpenMP threads ── */
+    omp_set_num_threads(num_threads);
+
+    /* ── Initialise the lock ── */
+    omp_init_lock(&best_lock);
+
+    double T_init = gettime() - t_init_start;
+
+    /* ═══════════════════════════════════════
+     * PARALLEL SECTION
+     *
+     * Strategy: parallelise at depth 1.
+     * The root is always city 0 (City 1).
+     * The first move can be to any of the
+     * N-1 remaining cities.  We hand each
+     * of those first moves to a thread as
+     * an independent task.
+     * ═══════════════════════════════════════ */
+    double t_comp_start = gettime();
+
+    #pragma omp parallel
+    {
+        /* Each thread has its OWN private arrays */
+        int  local_path[MAXN];
+        bool local_visited[MAXN];
+
+        /* ── Parallel for: distribute first moves across threads ── */
+        #pragma omp for schedule(dynamic, 1)
+        for (int first = 1; first < N; first++) {
+
+            /* Initialise private state for this first-move subtree */
+            for (int i = 0; i < N; i++)
+                local_visited[i] = false;
+
+            local_visited[0]     = true;   /* City 1 always start */
+            local_visited[first] = true;   /* first move chosen   */
+
+            local_path[0] = 0;
+            local_path[1] = first;
+
+            /* Recurse into the subtree rooted at this first move */
+            branch_and_bound(2,
+                             first,
+                             E[0][first],
+                             local_path,
+                             local_visited);
+        }
+    } /* end parallel */
+
+    double T_comp  = gettime() - t_comp_start;
+    double T_total = T_init + T_comp;
+
+    /* ── Destroy the lock ── */
+    omp_destroy_lock(&best_lock);
+
+    /* ── Output ── */
+    printf("\n=== Wariara Freights Inc. – Optimal Route (OpenMP) ===\n");
+    printf("Cities          : %d\n", N);
+    printf("Threads used    : %d\n", num_threads);
+    printf("Minimum energy  : %d kWh\n", best_cost);
+    printf("Optimal route   : ");
+    for (int i = 0; i < N; i++)
+        printf("%d%s", best_path[i] + 1, i < N - 1 ? " -> " : "\n");
+
+    printf("\n=== Timing ===\n");
+    printf("Initialisation  : %.6f s\n", T_init);
+    printf("Computation     : %.6f s\n", T_comp);
+    printf("Total           : %.6f s\n", T_total);
+
+    return EXIT_SUCCESS;
+}
