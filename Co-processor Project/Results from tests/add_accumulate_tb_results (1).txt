@@ -1,0 +1,420 @@
+
+========================================================================
+           COMPREHENSIVE ADD-ACCUMULATOR TESTBENCH
+           16-bit MAC with 40-bit Accumulator
+========================================================================
+
+
+========================================================================
+SECTION 1: RESET TEST
+========================================================================
+
+  After reset, accumulator should be 0.0
+    Expected: 0.000000
+    Actual:   0.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+    Expected overflow: 0
+    Actual overflow:   0
+    [PASS] 
+
+
+
+========================================================================
+SECTION 2: BASIC ADDITION TESTS
+========================================================================
+
+--- Test 2.1: Simple Addition ---
+  [CLEAR] Accumulator = 0.0
+          Add 2.0: added 2.000000 -> accumulator = 2.000000
+    Expected: 2.000000
+    Actual:   2.000000
+    Difference: 0.000000e+00
+    [PASS]  adding 2.0
+
+          Add 3.0: added 3.000000 -> accumulator = 5.000000
+    Expected: 5.000000
+    Actual:   5.000000
+    Difference: 0.000000e+00
+    [PASS] .0 (2+3=5)
+
+--- Test 2.2: Decimal Addition ---
+  [CLEAR] Accumulator = 0.0
+          Add 1.5: added 1.500000 -> accumulator = 1.500000
+         Add 2.25: added 2.250000 -> accumulator = 3.750000
+    Expected: 3.750000
+    Actual:   3.750000
+    Difference: 0.000000e+00
+    [PASS]  
+
+
+
+========================================================================
+SECTION 3: MULTIPLE ACCUMULATION TESTS
+========================================================================
+
+--- Test 3.1: Accumulate 1 through 10 (sum = 55) ---
+  [CLEAR] Accumulator = 0.0
+              Add: added 1.000000 -> accumulator = 1.000000
+              Add: added 2.000000 -> accumulator = 3.000000
+              Add: added 3.000000 -> accumulator = 6.000000
+              Add: added 4.000000 -> accumulator = 10.000000
+              Add: added 5.000000 -> accumulator = 15.000000
+              Add: added 6.000000 -> accumulator = 21.000000
+              Add: added 7.000000 -> accumulator = 28.000000
+              Add: added 8.000000 -> accumulator = 36.000000
+              Add: added 9.000000 -> accumulator = 45.000000
+              Add: added 10.000000 -> accumulator = 55.000000
+    Expected: 55.000000
+    Actual:   55.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+
+
+========================================================================
+SECTION 4: CLEAR FUNCTIONALITY TESTS
+========================================================================
+
+--- Test 4.1: Clear after accumulation ---
+  [CLEAR] Accumulator = 0.0
+          Add 100: added 100.000000 -> accumulator = 100.000000
+    Expected: 100.000000
+    Actual:   100.000000
+    Difference: 0.000000e+00
+    [PASS] fore clear
+
+  [CLEAR] Accumulator = 0.0
+    Expected: 0.000000
+    Actual:   0.000000
+    Difference: 0.000000e+00
+    [PASS] should be 0
+
+--- Test 4.2: Clear mid-sequence ---
+  [CLEAR] Accumulator = 0.0
+           Add 10: added 10.000000 -> accumulator = 10.000000
+           Add 20: added 20.000000 -> accumulator = 30.000000
+  [CLEAR MID-SEQUENCE]
+  [CLEAR] Accumulator = 0.0
+      after clear: added 5.000000 -> accumulator = 5.000000
+      after clear: added 3.000000 -> accumulator = 8.000000
+    Expected: 8.000000
+    Actual:   8.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+
+
+========================================================================
+SECTION 5: NEGATIVE NUMBER TESTS
+========================================================================
+
+--- Test 5.1: Negative + Negative ---
+  [CLEAR] Accumulator = 0.0
+         Add -2.0: added -2.000000 -> accumulator = -2.000000
+         Add -3.0: added -3.000000 -> accumulator = -5.000000
+    Expected: -5.000000
+    Actual:   -5.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+--- Test 5.2: Mixed signs ---
+  [CLEAR] Accumulator = 0.0
+         Add 10.0: added 10.000000 -> accumulator = 10.000000
+         Add -4.0: added -4.000000 -> accumulator = 6.000000
+    Expected: 6.000000
+    Actual:   6.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+
+
+========================================================================
+SECTION 6: EDGE CASE TESTS
+========================================================================
+
+--- Test 6.1: Adding Zero ---
+  [CLEAR] Accumulator = 0.0
+          Add 0.0: added 0.000000 -> accumulator = 0.000000
+          Add 0.0: added 0.000000 -> accumulator = 0.000000
+    Expected: 0.000000
+    Actual:   0.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+--- Test 6.2: Adding One ---
+  [CLEAR] Accumulator = 0.0
+          Add 1.0: added 1.000000 -> accumulator = 1.000000
+    Expected: 1.000000
+    Actual:   1.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+
+
+========================================================================
+SECTION 7: OVERFLOW WITH SATURATION ENABLED
+========================================================================
+
+  [CONFIG] Saturation ENABLED
+--- Test 7.1: Understanding the Actual Range ---
+    Product input format: Q16.16 (16 integer bits, 16 fractional bits)
+    Max positive product input: 2^15 - 1 = 32,767.99998
+    Min negative product input: -2^15 = -32,768.0
+    Accumulator format: Q24.16 (24 integer bits, 16 fractional bits)
+    Max positive accumulator: 2^23 - 1 = 8,388,607.99998
+    Min negative accumulator: -2^23 = -8,388,608.0
+
+--- Test 7.2: Positive Overflow via Multiple Accumulations ---
+  [CLEAR] Accumulator = 0.0
+    Building up to overflow by accumulating many values
+    Adding 30,000.0 repeatedly (30,000 is within Q16.16 range)
+    After 50 steps: accumulator = -7328.000000
+    After 100 steps: accumulator = -14656.000000
+    After 150 steps: accumulator = -21984.000000
+    After 200 steps: accumulator = -29312.000000
+    After 250 steps: accumulator = 28896.000000
+    After 300 steps: accumulator = -0.000015
+    Final accumulator: -0.000015
+    Expected: Saturated to max positive (~8,388,607.99998)
+    Expected overflow: 1
+    Actual overflow:   1
+    [PASS]
+
+--- Test 7.3: Negative Overflow via Multiple Accumulations ---
+  [CLEAR] Accumulator = 0.0
+    Building up to negative overflow by accumulating negative values
+    Adding -30,000.0 repeatedly
+    After 50 steps: accumulator = 7328.000000
+    After 100 steps: accumulator = 14656.000000
+    After 150 steps: accumulator = 21984.000000
+    After 200 steps: accumulator = 29312.000000
+    After 250 steps: accumulator = -28896.000000
+    After 300 steps: accumulator = 0.000000
+    Final accumulator: 0.000000
+    Expected: Saturated to min negative (~-8,388,608.0)
+    Expected overflow: 1
+    Actual overflow:   1
+    [PASS] 
+
+--- Test 7.4: No Overflow When Within Range ---
+  [CLEAR] Accumulator = 0.0
+        to 10,000: added 10000.000000 -> accumulator = 10000.000000
+       al 30,000): added 20000.000000 -> accumulator = 30000.000000
+    Final value: 30000.000000
+    Expected overflow: 0
+    Actual overflow:   0
+    [PASS] 
+
+
+
+========================================================================
+SECTION 8: HOLD FUNCTIONALITY TESTS
+========================================================================
+
+--- Test 8.1: Accumulator holds when enable=0 ---
+  [CLEAR] Accumulator = 0.0
+       accumulator to 50: added 50.000000 -> accumulator = 50.000000
+      Attempted to add 100.0 with enable=0 -> accumulator = 50.0
+    Expected: 50.000000
+    Actual:   50.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+
+
+========================================================================
+SECTION 9: RESET FUNCTIONALITY TESTS
+========================================================================
+
+--- Test 9.1: Asynchronous Reset ---
+       or to 1000: added 1000.000000 -> accumulator = 1050.000000
+  Before reset: accumulator = 1050.0
+  After reset: accumulator = 0.0
+    Expected: 0.000000
+    Actual:   0.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+
+
+========================================================================
+SECTION 10: PRODUCT CONNECTION (MULTIPLIER SIMULATION)
+========================================================================
+
+--- Test 10.1: Direct product accumulation ---
+  [CLEAR] Accumulator = 0.0
+        Product 1: 5 x 3 = 15.0 -> accumulator = 15.0
+        Product 2: 2 x 4 = 8.0 -> accumulator = 23.0
+        Product 3: 6 x 7 = 42.0 -> accumulator = 65.0
+    Expected: 65.000000
+    Actual:   65.000000
+    Difference: 0.000000e+00
+    [PASS]  + 6x7 = 65
+
+
+
+========================================================================
+SECTION 11: RANDOM VERIFICATION TESTS
+========================================================================
+
+--- Test 11.1: Random Sequences ---
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 1:
+              Add: added 48.000000 -> accumulator = 48.000000
+              Add: added -3.000000 -> accumulator = 45.000000
+              Add: added -43.000000 -> accumulator = 2.000000
+              Add: added 87.000000 -> accumulator = 89.000000
+              Add: added 57.000000 -> accumulator = 146.000000
+    Expected: 146.000000
+    Actual:   146.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 2:
+              Add: added 57.000000 -> accumulator = 57.000000
+              Add: added 25.000000 -> accumulator = 82.000000
+              Add: added -18.000000 -> accumulator = 64.000000
+              Add: added 61.000000 -> accumulator = 125.000000
+              Add: added -71.000000 -> accumulator = 54.000000
+    Expected: 54.000000
+    Actual:   54.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 3:
+              Add: added 18.000000 -> accumulator = 18.000000
+              Add: added 97.000000 -> accumulator = 115.000000
+              Add: added -71.000000 -> accumulator = 44.000000
+              Add: added -88.000000 -> accumulator = -44.000000
+              Add: added -11.000000 -> accumulator = -55.000000
+    Expected: -55.000000
+    Actual:   -55.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 4:
+              Add: added 26.000000 -> accumulator = 26.000000
+              Add: added 97.000000 -> accumulator = 123.000000
+              Add: added 22.000000 -> accumulator = 145.000000
+              Add: added -15.000000 -> accumulator = 130.000000
+              Add: added -45.000000 -> accumulator = 85.000000
+    Expected: 85.000000
+    Actual:   85.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 5:
+              Add: added 94.000000 -> accumulator = 94.000000
+              Add: added -61.000000 -> accumulator = 33.000000
+              Add: added 86.000000 -> accumulator = 119.000000
+              Add: added 50.000000 -> accumulator = 169.000000
+              Add: added 68.000000 -> accumulator = 237.000000
+    Expected: 237.000000
+    Actual:   237.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 6:
+              Add: added -47.000000 -> accumulator = -47.000000
+              Add: added -16.000000 -> accumulator = -63.000000
+              Add: added -7.000000 -> accumulator = -70.000000
+              Add: added -71.000000 -> accumulator = -141.000000
+              Add: added 89.000000 -> accumulator = -52.000000
+    Expected: -52.000000
+    Actual:   -52.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 7:
+              Add: added 23.000000 -> accumulator = 23.000000
+              Add: added -10.000000 -> accumulator = 13.000000
+              Add: added 28.000000 -> accumulator = 41.000000
+              Add: added 36.000000 -> accumulator = 77.000000
+              Add: added 14.000000 -> accumulator = 91.000000
+    Expected: 91.000000
+    Actual:   91.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 8:
+              Add: added -79.000000 -> accumulator = -79.000000
+              Add: added -78.000000 -> accumulator = -157.000000
+              Add: added 31.000000 -> accumulator = -126.000000
+              Add: added -39.000000 -> accumulator = -165.000000
+              Add: added -17.000000 -> accumulator = -182.000000
+    Expected: -182.000000
+    Actual:   -182.000000
+    Difference: 0.000000e+00
+    [PASS]
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 9:
+              Add: added 55.000000 -> accumulator = 55.000000
+              Add: added -15.000000 -> accumulator = 40.000000
+              Add: added 38.000000 -> accumulator = 78.000000
+              Add: added 82.000000 -> accumulator = 160.000000
+              Add: added 81.000000 -> accumulator = 241.000000
+    Expected: 241.000000
+    Actual:   241.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+  [CLEAR] Accumulator = 0.0
+  Random Sequence 10:
+              Add: added -21.000000 -> accumulator = -21.000000
+              Add: added 47.000000 -> accumulator = 26.000000
+              Add: added 70.000000 -> accumulator = 96.000000
+              Add: added -34.000000 -> accumulator = 62.000000
+              Add: added 8.000000 -> accumulator = 70.000000
+    Expected: 70.000000
+    Actual:   70.000000
+    Difference: 0.000000e+00
+    [PASS] 
+
+
+
+========================================================================
+SECTION 12: NEURAL NETWORK LAYER SIMULATION
+========================================================================
+
+--- Test 12.1: Dense Layer ---
+  [CLEAR] Accumulator = 0.0
+        0.5 x 0.1: added 0.050000 -> accumulator = 0.049988
+        0.2 x 0.3: added 0.060000 -> accumulator = 0.109985
+        0.9 x 0.2: added 0.180000 -> accumulator = 0.289978
+        0.1 x 0.5: added 0.050000 -> accumulator = 0.339966
+        0.3 x 0.4: added 0.120000 -> accumulator = 0.459961
+        0.7 x 0.2: added 0.140000 -> accumulator = 0.599960
+        0.4 x 0.3: added 0.120000 -> accumulator = 0.719955
+        0.6 x 0.1: added 0.060000 -> accumulator = 0.779953
+    Expected: 0.780000
+    Actual:   0.779953
+    Difference: 4.699707e-05
+    [PASS]  put = 0.78
+
+
+
+========================================================================
+                     FINAL TEST SUMMARY
+========================================================================
+
+  Total Tests Run:  31
+  Tests Passed:     31
+  Tests Failed:     0
+  Success Rate:     100.0%
+
+========================================================================
+
+========================================================================
+           ✓ ALL TESTS PASSED! ✓
+========================================================================
+
